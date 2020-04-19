@@ -1,16 +1,19 @@
 <template>
   <div id="app">
     <img alt="Vue logo" src="./assets/logo.png">
+    <Graph functionType="continuous"/>
     <HelloWorld msg="Welcome to Your Vue.js + TypeScript App"/>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
+import Graph from './components/Graph.vue'
 import HelloWorld from './components/HelloWorld.vue'
 
 @Component({
   components: {
+    Graph,
     HelloWorld
   }
 })
