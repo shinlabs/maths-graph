@@ -3,13 +3,15 @@
     <h1>This will be a graph web component</h1>
     <p>Type of function (line / other) : </p>
     <p>{{ functionType }}</p>
-    <LineChart :chartConfig=planetChart></LineChart>
+    <div class="chart-container">
+      <LineChart :chartConfig=planetChart></LineChart>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator'
-import { ChartConfiguration } from 'chart.js'
+import { ChartConfiguration, ChartAnimationParameter } from 'chart.js'
 import LineChart from '@/components/charts/LineChart.vue'
 
 @Component({
@@ -18,7 +20,8 @@ import LineChart from '@/components/charts/LineChart.vue'
 export default class Graph extends Vue {
   @Prop() private functionType!: string;
 
-  xCoordinates = [
+  ACCEPTED_LABELS = [-10, -5, 0, 1, 5, 10];
+  X_COORD = [
     // negative values
     -10, -9, -8, -7, -6, -5, -4, -3, -2, -1,
     -1 / 2, -1 / 3, -1 / 4, -1 / 5, -1 / 6, -1 / 7, -1 / 8, -1 / 9, -1 / 10,
@@ -34,10 +37,11 @@ export default class Graph extends Vue {
       datasets: [
         {
           label: 'f(x) = 1/x',
-          data: this.xCoordinates.map(x => { return { x, y: 1 / x } }),
-          borderColor: new Array(39).fill('#36495d'),
-          borderWidth: 3,
-          fill: false
+          data: this.X_COORD.map(x => { return { x, y: 1 / x } }),
+          borderWidth: 2,
+          borderColor: '#f00',
+          fill: false,
+          pointRadius: 0
         }
       ]
     },
@@ -48,11 +52,30 @@ export default class Graph extends Vue {
           type: 'linear',
           ticks: {
             suggestedMin: -10,
-            suggestedMax: 10
+            suggestedMax: 10,
+            stepSize: 1,
+            callback: this.ticksToPrint,
+            maxRotation: 0
+          },
+          gridLines: {
+            zeroLineColor: '#000'
+          }
+        }],
+        yAxes: [{
+          ticks: {
+            stepSize: 1,
+            callback: this.ticksToPrint
+          },
+          gridLines: {
+            zeroLineColor: '#000'
           }
         }]
       }
     }
+  }
+
+  ticksToPrint (value: any, index: any, values: any) {
+    return this.ACCEPTED_LABELS.includes(value) ? value : ''
   }
 }
 </script>
@@ -60,5 +83,11 @@ export default class Graph extends Vue {
 <style lang="scss" scoped>
 p {
   color: red;
+}
+
+.chart-container {
+  margin: auto;
+  width: 40%;
+  height: 40%;
 }
 </style>
