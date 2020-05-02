@@ -5,6 +5,7 @@ module.exports = {
   },
   extends: [
     'plugin:vue/essential',
+    'plugin:import/errors',
     '@vue/standard',
     '@vue/typescript/recommended'
   ],
@@ -13,7 +14,8 @@ module.exports = {
   },
   rules: {
     'no-console': process.env.NODE_ENV === 'production' ? 'error' : 'off',
-    'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off'
+    'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
+    'import/no-unused-modules': 'error'
   },
   overrides: [
     {
