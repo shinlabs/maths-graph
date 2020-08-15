@@ -1,0 +1,104 @@
+version: 2.1
+orbs:
+  node: circleci/node@1.1.6
+jobs:
+  test review:
+    executor:
+      name: node/default
+    steps:
+      - checkout
+      - node/with-cache:
+          steps:
+            - run: npm install
+            - run: npm test
+  build review:
+    docker:
+      - image: ${DOCKER_USER}/debian-with-docker:debian9.9-slim-docker18
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: false
+      - run: |
+          docker build -t ${DOCKER_REPOSITORY}:mwc-review .
+          echo ${DOCKER_PASS} | docker login -u ${DOCKER_USER} --password-stdin
+          docker push ${DOCKER_REPOSITORY}:mwc-review
+  deploy review:
+    machine:
+      enabled: true
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - $SSH_FINGERPRINTS
+      - run:
+          name: Deploy review on vps
+          command: |
+            ssh ${VPS_USER}@${VPS_IP} -p ${VPS_PORT} "./ci_scripts/deploy_mwc_review.sh"
+  test staging:
+    executor:
+      name: node/default
+    steps:
+      - checkout
+      - node/with-cache:
+          steps:
+            - run: npm install
+            - run: npm test
+  build staging:
+    docker:
+      - image: ${DOCKER_USER}/debian-with-docker:debian9.9-slim-docker18
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: false
+      - run: |
+          docker build -t ${DOCKER_REPOSITORY}:mwc-staging .
+          echo ${DOCKER_PASS} | docker login -u ${DOCKER_USER} --password-stdin
+          docker push ${DOCKER_REPOSITORY}:mwc-staging
+  deploy staging:
+    machine:
+      enabled: true
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - $SSH_FINGERPRINTS
+      - run:
+          name: Deploy staging on vps
+          command: |
+            ssh ${VPS_USER}@${VPS_IP} -p ${VPS_PORT} "./ci_scripts/deploy_mwc_staging.sh"
+workflows:
+  version: 2.1
+  test-review:
+    jobs:
+      - test review:
+          filters:
+            branches:
+              only: /\d{3}-.*/
+  build-and-deploy-review:
+    jobs:
+      - build review:
+          filters:
+            branches:
+              only: /\d{3}-.*/
+      - deploy review:
+          requires:
+            - build review
+          filters:
+            branches:
+              only: /\d{3}-.*/
+  test-staging:
+    jobs:
+      - test staging:
+          filters:
+            branches:
+              only: master
+  build-and-deploy-staging:
+    jobs:
+      - build staging:
+          filters:
+            branches:
+              only: master
+      - deploy staging:
+          requires:
+            - build staging
+          filters:
+            branches:
+              only: master
